@@ -46,11 +46,10 @@ def get_wr_skey():
     """刷新cookie密钥"""
     response = requests.post(RENEW_URL, headers=headers, cookies=cookies,
                              data=json.dumps(COOKIE_DATA, separators=(',', ':')))
-    print(response.headers.get('Set-Cookie', '').split(';'))
     for cookie in response.headers.get('Set-Cookie', '').split(';'):
         if "wr_skey" in cookie:
-            return cookie.split('=')[-1][:8]
-    return None
+            return [cookie.split('=')[-1][:8],response.headers.get('Set-Cookie', '').split(';')]
+    return [None,response.headers.get('Set-Cookie', '').split(';')]
 
 def fix_no_synckey():
     requests.post(FIX_SYNCKEY_URL, headers=headers, cookies=cookies,
@@ -58,7 +57,10 @@ def fix_no_synckey():
 
 def refresh_cookie():
     logging.info(f"🍪 刷新cookie")
-    new_skey = get_wr_skey()
+    new_skey_list = get_wr_skey()
+    new_skey = new_skey_list[0]
+    content = new_skey_list[1]
+    logging.info(content)
     if new_skey:
         cookies['wr_skey'] = new_skey
         logging.info(f"✅ 密钥刷新成功，新密钥：{new_skey}")
